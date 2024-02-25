@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type apiConfig struct {
@@ -11,13 +13,15 @@ type apiConfig struct {
 
 func main() {
 	apiCfg := apiConfig{}
-	mux := http.NewServeMux()
-	corsMux := middlewareCors(mux)
+	rt := chi.NewRouter()
+	corsMux := middlewareCors(rt)
+	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir("."))))
 
-	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
-	mux.HandleFunc("/healthz", healthzHandler)
-	mux.HandleFunc("/metrics", apiCfg.metricsHandler)
-	mux.HandleFunc("/reset", apiCfg.resetHandler)
+	rt.Handle("/app", fsHandler)
+	rt.Handle("/app/*", fsHandler)
+	rt.Get("/healthz", healthzHandler)
+	rt.Get("/metrics", apiCfg.metricsHandler)
+	rt.HandleFunc("/reset", apiCfg.resetHandler)
 
 	srv := &http.Server{
 		Addr:    ":8080",
