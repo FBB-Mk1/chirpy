@@ -14,18 +14,22 @@ type apiConfig struct {
 func main() {
 	port := "8080"
 	apiCfg := apiConfig{}
-	rt := chi.NewRouter()
+
 	apiRt := chi.NewRouter()
-	corsMux := middlewareCors(rt)
+	apiRt.Get("/healthz", healthzHandler)
+	apiRt.HandleFunc("/reset", apiCfg.resetHandler)
+
+	adminRt := chi.NewRouter()
+	adminRt.Get("/metrics", apiCfg.metricsHandler)
 
 	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir("."))))
+	rt := chi.NewRouter()
 
 	rt.Mount("/api", apiRt)
+	rt.Mount("/admin", adminRt)
 	rt.Mount("/app", fsHandler)
 
-	apiRt.Get("/healthz", healthzHandler)
-	apiRt.Get("/metrics", apiCfg.metricsHandler)
-	apiRt.HandleFunc("/reset", apiCfg.resetHandler)
+	corsMux := middlewareCors(rt)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
