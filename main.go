@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"www.github.com/fbb-mk1/chirpy/internal/database"
 )
 
 type apiConfig struct {
@@ -14,7 +16,11 @@ type apiConfig struct {
 func main() {
 	port := "8080"
 	apiCfg := apiConfig{}
-
+	db, e := database.NewDB(".")
+	if e != nil {
+		log.Fatal("fuuuu")
+	}
+	db.CreateChirp("test")
 	apiRt := chi.NewRouter()
 	apiRt.Get("/healthz", healthzHandler)
 	apiRt.Post("/validate_chirp", chirpValidateHandler)
