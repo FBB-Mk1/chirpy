@@ -11,19 +11,23 @@ import (
 
 type apiConfig struct {
 	fileserverHits int
+	db             *database.DB
 }
 
 func main() {
 	port := "8080"
-	apiCfg := apiConfig{}
-	db, e := database.NewDB(".")
+	dbPath := "."
+
+	db, e := database.NewDB(dbPath)
 	if e != nil {
 		log.Fatal("fuuuu")
 	}
-	db.CreateChirp("test")
+	apiCfg := apiConfig{fileserverHits: 0, db: db}
+
 	apiRt := chi.NewRouter()
 	apiRt.Get("/healthz", healthzHandler)
-	apiRt.Post("/validate_chirp", chirpValidateHandler)
+	apiRt.Post("/chirps", apiCfg.chirpValidateHandler)
+	apiRt.Get("/chirps", apiCfg.getChirpHandler)
 	apiRt.HandleFunc("/reset", apiCfg.resetHandler)
 
 	adminRt := chi.NewRouter()

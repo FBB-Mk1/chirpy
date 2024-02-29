@@ -24,7 +24,15 @@ type chirpCleaned struct {
 	CleanedBody string `json:"cleaned_body"`
 }
 
-func chirpValidateHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) getChirpHandler(w http.ResponseWriter, r *http.Request) {
+	respBody, err := cfg.db.GetChirps()
+	if err != nil {
+		respondWithError(w, 500, err.Error())
+	}
+	respondWithJSON(w, 201, respBody)
+}
+
+func (cfg *apiConfig) chirpValidateHandler(w http.ResponseWriter, r *http.Request) {
 	// decode chirp
 	decoder := json.NewDecoder(r.Body)
 	c := chirp{}

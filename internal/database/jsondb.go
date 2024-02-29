@@ -1,6 +1,9 @@
 package database
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type Chirp struct {
 	Id   int    `json:"id"`
@@ -19,32 +22,49 @@ type DBStructure struct {
 // NewDB creates a new database connection
 // and creates the database file if it doesn't exist
 func NewDB(path string) (*DB, error) {
-	return &DB{}, nil
+	fullpath := path + "/database.json"
+	db := &DB{path: fullpath, mux: &sync.RWMutex{}}
+	err := db.ensureDB()
+	return db, err
 }
 
 // CreateChirp creates a new chirp and saves it to disk
 func (db *DB) CreateChirp(body string) (Chirp, error) {
+	chirps, err := db.loadDB()
+	if err != nil {
+		return Chirp{}, err
+	}
+	db.writeDB(chirps)
 	return Chirp{}, nil
 }
 
-// CreateChirp creates a new chirp and saves it to disk
+// GetChirps reads from disk and returns to reader
 func (db *DB) GetChirps() ([]Chirp, error) {
-	return []Chirp{}, nil
+	chirps, err := db.loadDB()
+	chirpSlice := []Chirp{}
+	if err != nil {
+		return chirpSlice, err
+	}
+	for _, v := range chirps.Chirps {
+		chirpSlice = append(chirpSlice, Chirp{v.Id, v.Body})
+	}
+	return chirpSlice, nil
 }
 
 // ensureDB creates a new database file if it doesn't exist
 func (db *DB) ensureDB() error {
-	_, err := db.loadDB()
-	return err
+	//
+	return nil
 }
 
 // loadDB reads the database file into memory
 func (db *DB) loadDB() (DBStructure, error) {
-	err := db.ensureDB()
-	return DBStructure{}, err
+
+	return DBStructure{}, nil
 }
 
 // writeDB writes the database file to disk
 func (db *DB) writeDB(dbStructure DBStructure) error {
+	fmt.Println(dbStructure.Chirps)
 	return nil
 }
