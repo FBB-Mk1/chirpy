@@ -8,20 +8,12 @@ import (
 	"strings"
 )
 
-type chirpValid struct {
-	Valid bool `json:"valid"`
-}
-
 type chirpError struct {
 	Error string `json:"error"`
 }
 
 type chirp struct {
 	Body string `json:"body"`
-}
-
-type chirpCleaned struct {
-	CleanedBody string `json:"cleaned_body"`
 }
 
 func (cfg *apiConfig) getChirpHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,14 +41,17 @@ func (cfg *apiConfig) chirpValidateHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	// respond with { "valid": true }
-	cleaned, ok := checkProfanity(c.Body)
+	body := c.Body
+	cleaned, ok := checkProfanity(body)
 	if !ok {
-		respBody := chirpCleaned{CleanedBody: cleaned}
-		respondWithJSON(w, 200, respBody)
+		body = cleaned
+	}
+	chirp, err := cfg.db.CreateChirp(body)
+	if err != nil {
+		respondWithJSON(w, 400, chirp)
 		return
 	}
-	respBody := chirpValid{Valid: true}
-	respondWithJSON(w, 200, respBody)
+	respondWithJSON(w, 201, chirp)
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
@@ -68,10 +63,9 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	res, err := json.Marshal(payload)
 	if err != nil {
-		w.WriteHeader(500)
-	} else {
-		w.WriteHeader(code)
+		code = 500
 	}
+	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(res)
 }
