@@ -5,7 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type chirpError struct {
@@ -16,12 +19,24 @@ type chirp struct {
 	Body string `json:"body"`
 }
 
+func (cfg *apiConfig) getSingleChirp(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		respondWithError(w, 404, "invalid id")
+	}
+	chirp, err := cfg.db.GetChirpbyID(id)
+	if err != nil {
+		respondWithError(w, 404, err.Error())
+	}
+	respondWithJSON(w, 200, chirp)
+}
+
 func (cfg *apiConfig) getChirpHandler(w http.ResponseWriter, r *http.Request) {
 	respBody, err := cfg.db.GetChirps()
 	if err != nil {
 		respondWithError(w, 500, err.Error())
 	}
-	respondWithJSON(w, 201, respBody)
+	respondWithJSON(w, 200, respBody)
 }
 
 func (cfg *apiConfig) chirpValidateHandler(w http.ResponseWriter, r *http.Request) {

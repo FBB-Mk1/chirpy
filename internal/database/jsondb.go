@@ -3,6 +3,7 @@ package database
 import (
 	"cmp"
 	"encoding/json"
+	"errors"
 	"os"
 	"slices"
 	"sync"
@@ -40,7 +41,7 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	if err != nil {
 		return Chirp{}, err
 	}
-	nextId := 1
+	nextId := 0
 	if len(chirps) > 0 {
 		nextId = chirps[len(chirps)-1].Id + 1
 	}
@@ -94,6 +95,19 @@ func (db *DB) loadDB() (DBStructure, error) {
 		}
 	}
 	return dbStruct, nil
+}
+
+func (db *DB) GetChirpbyID(id int) (Chirp, error) {
+	data, err := db.loadDB()
+	chirp := Chirp{}
+	if err != nil {
+		return chirp, err
+	}
+	chirp, ok := data.Chirps[id]
+	if !ok {
+		return chirp, errors.New("Chirp not found")
+	}
+	return chirp, nil
 }
 
 // writeDB writes the database file to disk
