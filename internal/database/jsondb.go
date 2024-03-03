@@ -1,17 +1,20 @@
 package database
 
 import (
-	"cmp"
 	"encoding/json"
 	"errors"
 	"os"
-	"slices"
 	"sync"
 )
 
 type Chirp struct {
 	Id   int    `json:"id"`
 	Body string `json:"body"`
+}
+
+type User struct {
+	Id    int    `json:"id"`
+	Email string `json:"email"`
 }
 
 type DB struct {
@@ -21,6 +24,7 @@ type DB struct {
 
 type DBStructure struct {
 	Chirps map[int]Chirp `json:"chirps"`
+	Users  map[int]User  `json:"users"`
 }
 
 // NewDB creates a new database connection
@@ -30,49 +34,6 @@ func NewDB(path string) (*DB, error) {
 	db := &DB{path: fullpath, mux: &sync.RWMutex{}}
 	err := db.ensureDB()
 	return db, err
-}
-
-// CreateChirp creates a new chirp and saves it to disk
-func (db *DB) CreateChirp(body string) (Chirp, error) {
-	chirps, err := db.GetChirps()
-	slices.SortFunc(chirps, func(i, j Chirp) int {
-		return cmp.Compare(i.Id, j.Id)
-	})
-	if err != nil {
-		return Chirp{}, err
-	}
-	nextId := 1
-	if len(chirps) > 0 {
-		nextId = chirps[len(chirps)-1].Id + 1
-	}
-	newChirp := Chirp{Id: nextId, Body: body}
-	chirps = append(chirps, newChirp)
-	err = db.writeDB(chirpSliceToStruct(chirps))
-	if err != nil {
-		return Chirp{}, err
-	}
-	return newChirp, nil
-}
-
-func chirpSliceToStruct(chirps []Chirp) DBStructure {
-	dbStruct := make(map[int]Chirp)
-	for _, val := range chirps {
-		dbStruct[val.Id] = val
-	}
-	return DBStructure{dbStruct}
-}
-
-// GetChirps reads from disk and returns to reader
-func (db *DB) GetChirps() ([]Chirp, error) {
-	chirps, err := db.loadDB()
-	chirpSlice := []Chirp{}
-	if err != nil {
-		return chirpSlice, err
-	}
-	for _, v := range chirps.Chirps {
-		chirpSlice = append(chirpSlice, Chirp{v.Id, v.Body})
-	}
-	return chirpSlice, nil
 }
 
 // ensureDB creates a new database file if it doesn't exist
