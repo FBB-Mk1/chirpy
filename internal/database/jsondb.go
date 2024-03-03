@@ -41,7 +41,7 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	if err != nil {
 		return Chirp{}, err
 	}
-	nextId := 0
+	nextId := 1
 	if len(chirps) > 0 {
 		nextId = chirps[len(chirps)-1].Id + 1
 	}
@@ -56,8 +56,8 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 
 func chirpSliceToStruct(chirps []Chirp) DBStructure {
 	dbStruct := make(map[int]Chirp)
-	for idx, val := range chirps {
-		dbStruct[idx] = val
+	for _, val := range chirps {
+		dbStruct[val.Id] = val
 	}
 	return DBStructure{dbStruct}
 }
