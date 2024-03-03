@@ -48,6 +48,7 @@ func (cfg *apiConfig) chirpValidateHandler(w http.ResponseWriter, r *http.Reques
 	}
 	chirp, err := cfg.db.CreateChirp(body)
 	if err != nil {
+		fmt.Println(err)
 		respondWithJSON(w, 400, chirp)
 		return
 	}

@@ -40,7 +40,10 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	if err != nil {
 		return Chirp{}, err
 	}
-	nextId := chirps[len(chirps)-1].Id + 1
+	nextId := 1
+	if len(chirps) > 0 {
+		nextId = chirps[len(chirps)-1].Id + 1
+	}
 	newChirp := Chirp{Id: nextId, Body: body}
 	chirps = append(chirps, newChirp)
 	err = db.writeDB(chirpSliceToStruct(chirps))
@@ -51,11 +54,11 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 }
 
 func chirpSliceToStruct(chirps []Chirp) DBStructure {
-	dbStruct := DBStructure{}
+	dbStruct := make(map[int]Chirp)
 	for idx, val := range chirps {
-		dbStruct.Chirps[idx] = val
+		dbStruct[idx] = val
 	}
-	return dbStruct
+	return DBStructure{dbStruct}
 }
 
 // GetChirps reads from disk and returns to reader
@@ -84,9 +87,11 @@ func (db *DB) loadDB() (DBStructure, error) {
 	if err != nil {
 		return dbStruct, err
 	}
-	err = json.Unmarshal(data, &dbStruct)
-	if err != nil {
-		return dbStruct, err
+	if len(data) > 0 {
+		err = json.Unmarshal(data, &dbStruct)
+		if err != nil {
+			return dbStruct, err
+		}
 	}
 	return dbStruct, nil
 }
