@@ -27,6 +27,7 @@ func main() {
 	apiRt := chi.NewRouter()
 	apiRt.Get("/healthz", healthzHandler)
 	apiRt.Post("/chirps", apiCfg.chirpValidateHandler)
+	apiRt.Post("/users", apiCfg.userValidateHandler)
 	apiRt.Get("/chirps", apiCfg.getChirpsHandler)
 	apiRt.Get("/chirps/{id}", apiCfg.getSingleChirp)
 	apiRt.HandleFunc("/reset", apiCfg.resetHandler)
